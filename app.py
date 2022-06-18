@@ -48,29 +48,33 @@ class MoviesView(Resource):
     def get(self):
         try:
             # получаем director_id и genre_id
+            page = request.args.get('page', type=int, default=1)
             director_id = request.args.get('director_id', type=int)
             genre_id = request.args.get('genre_id', type=int)
             # если получаем director_id и genre_id, то выполняем поиск по ним
             if director_id and genre_id:
                 # получаем фильмы
-                all_movies = query_format_movie().filter(Movie.director_id == director_id, Movie.genre_id == genre_id).all()
+                all_movies = query_format_movie().filter(Movie.director_id == director_id, Movie.genre_id == genre_id)\
+                    .limit(10).offset((page - 1) * 10).all()
                 # если фильмы не найдены, то выбрасываем ошибку
                 if not all_movies:
                     raise ValueError("Нет фильмов с таким id режиссера и id жанра")
             # если получаем только director_id
             elif director_id:
-                all_movies = query_format_movie().filter(Movie.director_id == director_id).all()
+                all_movies = query_format_movie().filter(Movie.director_id == director_id)\
+                    .limit(10).offset((page - 1) * 10).all()
 
                 if not all_movies:
                     raise ValueError("Нет фильмов с таким id режиссера")
             # если получаем только genre_id
             elif genre_id:
-                all_movies = query_format_movie().filter(Movie.genre_id == genre_id).all()
+                all_movies = query_format_movie().filter(Movie.genre_id == genre_id).limit(10)\
+                    .offset((page - 1) * 10).all()
 
                 if not all_movies:
                     raise ValueError("Нет фильмов с таким id жанра")
             else:
-                all_movies = query_format_movie().all()
+                all_movies = query_format_movie().limit(10).offset((page - 1) * 10).all()
             # вывод всех фильм на сайт
             return movies_schema.dump(all_movies), 200
         except ValueError as e:
